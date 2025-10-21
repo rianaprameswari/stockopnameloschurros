@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#16a34a" />
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png">
-  <title>Stock Opname – PWA (Auto‑Sync)</title>
+  <title>Stock Opname – Sederhana (Single Device)</title>
   <style>
-    :root{--bg:#f7f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--primary:#16a34a;--danger:#dc2626;--warn:#d97706;--radius:16px;--shadow:0 8px 24px rgba(0,0,0,.08)}
+    :root{--bg:#f7f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--primary:#16a34a;--danger:#dc2626;--radius:16px;--shadow:0 8px 24px rgba(0,0,0,.08)}
     *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
     body{margin:0;background:var(--bg);color:var(--text)}
-    .container{max-width:960px;margin:24px auto;padding:16px}
+    .container{max-width:900px;margin:24px auto;padding:16px}
     h1{font-size:22px;margin:8px 0 12px}
     .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
     label{display:block;font-weight:600;margin:10px 0 6px}
@@ -23,7 +23,6 @@
     .btn:disabled{opacity:.6;cursor:not-allowed}
     .btn-ghost{background:#eef7f0;color:#065f46}
     .btn-danger{background:var(--danger)}
-    .btn-warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
     .muted{color:var(--muted);font-size:12px}
     .preview{background:#0b141a;color:#e8f0f7;border-radius:12px;padding:12px;font-family:ui-monospace,Menlo,Consolas;white-space:pre-wrap;min-height:120px}
     .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid #e5e7eb}
@@ -31,13 +30,8 @@
     .table th,.table td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;font-size:14px;white-space:nowrap}
     .table th{font-size:12px;color:#374151}
     .date-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .date-row .btn{padding:10px 12px}
     .date-shell{width:100%;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;background:#fff}
     input[type="date"]{appearance:none;-webkit-appearance:none;border:none;width:100%;padding:14px 12px;background:#fff;border-radius:0;font-size:16px;line-height:1.3}
-    input[type="date"]::-webkit-date-and-time-value{min-width:100%;height:1.2em}
-    input[type="date"]::-webkit-calendar-picker-indicator{padding:6px;margin-right:2px}
-    .statusbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:relative;z-index:5}
-    #saveSettings{pointer-events:auto}
     @media (max-width: 720px){ .row{grid-template-columns:1fr} }
     @media (max-width: 540px){
       .row3{grid-template-columns:1fr}
@@ -50,62 +44,28 @@
 </head>
 <body>
   <div class="container">
-    <h1>Stock Opname – PWA (Auto‑Sync)</h1>
-    <p class="muted">Offline dulu, auto-sync ke Google Sheets saat online. Prefill lintas perangkat via cloud.</p>
+    <h1>Stock Opname – Sederhana (Single Device)</h1>
+    <p class="muted">Mode sederhana: tanpa cloud, offline-first. Draft & prefill disimpan di perangkat yang sama.</p>
 
     <section class="card">
-      <h2 style="margin:0 0 10px;font-size:18px">Pengaturan</h2>
       <div class="row">
         <div>
-          <label>Google Apps Script Web App URL</label>
-          <input id="baseUrl" placeholder="https://script.google.com/macros/s/AKfycbx.../exec" />
-        </div>
-        <div>
-          <label>API Key</label>
-          <input id="apiKey" placeholder="AUTH_KEY dari Apps Script" />
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label>Nama Outlet/Kasir (opsional)</label>
-          <input id="byName" placeholder="misal: Sunflour Bites - Kasir A" />
+          <label>Nama Staff (By)</label>
+          <input id="byName" placeholder="misal: Kasir A" />
+          <p class="muted">Tersimpan otomatis di perangkat. Akan muncul di teks WhatsApp.</p>
         </div>
         <div>
           <label>Nomor WA Admin (62812… tanpa +)</label>
           <input id="adminNumber" value="6281234567890" inputmode="numeric" />
         </div>
       </div>
-      <div class="statusbar">
-       <button class="btn" id="saveSettings" type="button"
-onclick="(function(){
-  try{
-    localStorage.setItem('so_baseUrl', document.getElementById('baseUrl').value.trim());
-    localStorage.setItem('so_apiKey', document.getElementById('apiKey').value.trim());
-    localStorage.setItem('so_byName', document.getElementById('byName').value.trim());
-    localStorage.setItem('so_admin', document.getElementById('adminNumber').value.replace(/[^0-9]/g,''));
-    var t = document.getElementById('toast');
-    t.textContent = 'Pengaturan disimpan';
-    t.style.background = '#065f46';
-    t.classList.add('show');
-    setTimeout(function(){ t.classList.remove('show'); }, 1800);
-  }catch(e){
-    alert('Gagal simpan pengaturan');
-    console.error(e);
-  }
-})()"
->Simpan Pengaturan</button>
-        <span id="netBadge" class="badge off">Offline</span>
-        <span id="syncBadge" class="badge sync">Outbox: 0</span>
-      </div>
-      <p class="muted" style="margin-top:6px">Pengaturan disimpan di perangkat ini. Outbox menampung kiriman yang tertunda & otomatis dikirim saat online.</p>
     </section>
 
     <section class="card">
       <label>Tanggal</label>
       <div class="date-row">
         <div class="date-shell"><input id="tanggal" type="date" /></div>
-        <button class="btn btn-ghost" id="prefillYesterday" type="button">⬇ Prefill dari Kemarin (Cloud)</button>
-        <button class="btn btn-ghost" id="seedYesterday" type="button" title="Testing lokal">🧪 Dummy Kemarin (Lokal)</button>
+        <button class="btn btn-ghost" id="prefillLocal" type="button">⬇ Prefill dari Kemarin (Lokal)</button>
       </div>
     </section>
 
@@ -168,9 +128,8 @@ onclick="(function(){
       <pre class="preview" id="waPreview"></pre>
 
       <div class="row">
-        <button class="btn btn-ghost" id="saveCloud" type="button">Simpan ke Sheet (Cloud)</button>
-        <button class="btn btn-warn" id="queueCloud" type="button">Antrikan ke Outbox</button>
         <button class="btn" id="sendWA" type="button">Kirim ke WhatsApp</button>
+        <button class="btn btn-danger" id="clearDay" type="button">Hapus Draft Tanggal Ini</button>
       </div>
     </section>
   </div>
@@ -178,141 +137,118 @@ onclick="(function(){
   <div class="toast" id="toast"></div>
 
   <script>
-    // ===== Helpers & Keys =====
+    // ===== Helpers =====
     const $ = q => document.querySelector(q);
     const keyForDate = d => `so_draft_${d}`;
     const keyPrefill = d => `so_prefill_${d}`;
-    const KEY_OUTBOX = 'so_outbox_v11';
     function todayISO(){ return new Date().toISOString().slice(0,10); }
     function prevISO(s){ const d=new Date(s); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); }
-    function toast(msg,type='info'){ const t=$('#toast'); t.textContent=msg; t.style.background=(type==='ok')?'#065f46':(type==='error')?'#991b1b':(type==='warn')?'#92400e':'#111827'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
-    function loadSettings(){ return { baseUrl: localStorage.getItem('so_baseUrl')||'', apiKey: localStorage.getItem('so_apiKey')||'', byName: localStorage.getItem('so_byName')||'', admin: localStorage.getItem('so_admin')||'6281234567890' }; }
-    function saveSettings(obj){ localStorage.setItem('so_baseUrl',obj.baseUrl||''); localStorage.setItem('so_apiKey',obj.apiKey||''); localStorage.setItem('so_byName',obj.byName||''); localStorage.setItem('so_admin',obj.admin||''); }
+    function toast(msg,type='info'){ const t=document.getElementById('toast'); t.textContent=msg; t.style.background=(type==='ok')?'#065f46':(type==='error')?'#991b1b':'#111827'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
 
-    // ===== Network & Status Badges =====
-    function updateNetBadge(){ const b=$('#netBadge'); if(navigator.onLine){ b.textContent='Online'; b.className='badge on'; } else { b.textContent='Offline'; b.className='badge off'; } }
-    window.addEventListener('online', ()=>{ updateNetBadge(); tryAutoSync(); });
-    window.addEventListener('offline', updateNetBadge);
-    updateNetBadge();
-
-    function getOutbox(){ try{ return JSON.parse(localStorage.getItem(KEY_OUTBOX)||'[]'); }catch{return []} }
-    function setOutbox(arr){ localStorage.setItem(KEY_OUTBOX, JSON.stringify(arr)); updateSyncBadge(); }
-    function pushOutbox(item){ const arr=getOutbox(); arr.push(item); setOutbox(arr); }
-    function updateSyncBadge(){ const n=getOutbox().length; const s=$('#syncBadge'); s.textContent='Outbox: '+n; }
-
-    // ===== Settings UI =====
-    function renderSettings(){ const s=loadSettings(); $('#baseUrl').value=s.baseUrl; $('#apiKey').value=s.apiKey; $('#byName').value=s.byName; $('#adminNumber').value=s.admin; }
-    // HOTFIX: delegated click (supaya pasti tertangkap walau ada overlay/DOM belum siap)
-    document.addEventListener('click', function(e){
-      const btn = e.target.closest('#saveSettings');
-      if (!btn) return;
-      e.preventDefault();
-      try {
-        saveSettings({
-          baseUrl: $('#baseUrl').value.trim(),
-          apiKey:  $('#apiKey').value.trim(),
-          byName:  $('#byName').value.trim(),
-          admin:   $('#adminNumber').value.replace(/[^0-9]/g,'')
-        });
-        toast('Pengaturan disimpan','ok');
-      } catch (err) {
-        toast('Gagal menyimpan pengaturan','error');
-        console.error(err);
-      }
+    // ===== Simple settings (auto-save) =====
+    function loadSimple(){ document.getElementById('byName').value = localStorage.getItem('so_byName')||''; document.getElementById('adminNumber').value = localStorage.getItem('so_admin')||'6281234567890'; }
+    ['byName','adminNumber'].forEach(id=>{
+      document.addEventListener('input', e=>{
+        if(e.target && e.target.id===id){
+          localStorage.setItem(id==='byName'?'so_byName':'so_admin', e.target.value);
+        }
+      });
     });
 
     // ===== Date & Draft =====
-    $('#tanggal').value = todayISO();
-    $('#tanggal').addEventListener('change', ()=>{ loadDraft(); buildPreview(); prefillMap = loadPrefillMap(); applyPrefillToFormIfEmpty(); });
+    document.getElementById('tanggal').value = todayISO();
+    document.getElementById('tanggal').addEventListener('change', ()=>{ loadDraft(); buildPreview(); });
 
     const state = { items: new Map() };
-    function loadDraft(){ state.items.clear(); const raw=localStorage.getItem(keyForDate($('#tanggal').value)); if(raw){ try{ const obj=JSON.parse(raw); for(const k of Object.keys(obj)) state.items.set(k,obj[k]); }catch(e){} } renderTable(); }
-    function saveDraft(){ const obj={}; for(const [k,v] of state.items.entries()) obj[k]=v; localStorage.setItem(keyForDate($('#tanggal').value), JSON.stringify(obj)); }
+    function loadDraft(){ state.items.clear(); const raw=localStorage.getItem(keyForDate(document.getElementById('tanggal').value)); if(raw){ try{ const obj=JSON.parse(raw); for(const k of Object.keys(obj)) state.items.set(k,obj[k]); }catch(e){} } renderTable(); }
+    function saveDraft(){ const obj={}; for(const [k,v] of state.items.entries()) obj[k]=v; localStorage.setItem(keyForDate(document.getElementById('tanggal').value), JSON.stringify(obj)); }
 
-    function renderTable(){ const tb=$('#draftTable tbody'); tb.innerHTML=''; for(const [name,obj] of state.items.entries()){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${name}</td><td>${obj.awal}</td><td>${obj.masuk}</td><td>${obj.jual}</td><td>${obj.akhir}</td><td>${obj.note||''}</td><td><button class="btn btn-danger" data-del="${name}" type="button">Hapus</button></td>`; tb.appendChild(tr);} tb.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click',e=>{ const nm=e.currentTarget.getAttribute('data-del'); state.items.delete(nm); renderTable(); buildPreview(); saveDraft(); })); }
+    function renderTable(){ const tb=document.querySelector('#draftTable tbody'); tb.innerHTML=''; for(const [name,obj] of state.items.entries()){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${name}</td><td>${obj.awal}</td><td>${obj.masuk}</td><td>${obj.jual}</td><td>${obj.akhir}</td><td>${obj.note||''}</td><td><button class='btn btn-danger' data-del='${name}' type='button'>Hapus</button></td>`; tb.appendChild(tr);} tb.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click',e=>{ const nm=e.currentTarget.getAttribute('data-del'); state.items.delete(nm); renderTable(); buildPreview(); saveDraft(); })); }
 
-    // ===== Form =====
-    function calcAkhir(){ const a=Number($('#stokAwal').value||0), m=Number($('#stokMasuk').value||0), j=Number($('#terjual').value||0); $('#stokAkhir').value=Math.max(a+m-j,0); }
-    ['stokAwal','stokMasuk','terjual'].forEach(id=>$('#'+id).addEventListener('input', calcAkhir));
-    $('#namaBarang').addEventListener('change', applyPrefillToFormIfEmpty);
-    function buildPreview(){ const tgl=$('#tanggal').value||todayISO(); let lines=['Stock Opname',`Tanggal: ${tgl}`,'']; for(const [name,obj] of state.items.entries()){ lines.push(`Barang: ${name}`); lines.push(`Stok Awal: ${obj.awal}`); lines.push(`Restock: ${obj.masuk}`); lines.push(`Terjual: ${obj.jual}`); lines.push(`Stok Akhir: ${obj.akhir}`); lines.push(''); } $('#waPreview').textContent=lines.join('\n'); }
-    $('#addToDraft').addEventListener('click', ()=>{ const name=$('#namaBarang').value.trim(); const awal=Number($('#stokAwal').value||0); const masuk=Number($('#stokMasuk').value||0); const jual=Number($('#terjual').value||0); const akhir=Math.max(awal+masuk-jual,0); const note=$('#catatan').value.trim(); if(!name){ toast('Pilih nama barang','error'); return; } if(state.items.has(name)){ toast('Barang sudah ada di draft','error'); return; } state.items.set(name,{awal,masuk,jual,akhir,note}); renderTable(); buildPreview(); saveDraft(); toast('Ditambahkan ke draft','ok'); });
-    $('#resetForm').addEventListener('click', ()=>{ $('#stokAwal').value=0; $('#stokMasuk').value=0; $('#terjual').value=0; $('#catatan').value=''; calcAkhir(); });
-
-    // ===== Prefill Map (Cloud, tidak menyentuh draft) =====
-    let prefillMap = {};
-    function loadPrefillMap(){ const raw=localStorage.getItem(keyPrefill($('#tanggal').value)); try{ return raw?JSON.parse(raw):{}; }catch{ return {}; } }
-    function applyPrefillToFormIfEmpty(){ const sel=$('#namaBarang').value; if(Number($('#stokAwal').value||0)===0 && prefillMap && prefillMap[sel]!=null){ $('#stokAwal').value=prefillMap[sel]; calcAkhir(); toast('Stok Awal diisi dari stok akhir kemarin','ok'); } }
-    async function fetchYesterdayFromCloud(todayISO){ const s=loadSettings(); if(!s.baseUrl||!s.apiKey) throw new Error('Pengaturan belum diisi'); const url=s.baseUrl+'?action=yesterday&date='+encodeURIComponent(todayISO)+'&key='+encodeURIComponent(s.apiKey); const res=await fetch(url,{method:'GET'}); const json=await res.json(); if(!json.ok) throw new Error(json.error||'Fetch error'); return json.data||{}; }
-    $('#prefillYesterday').addEventListener('click', async ()=>{ try{ const map=await fetchYesterdayFromCloud($('#tanggal').value); localStorage.setItem(keyPrefill($('#tanggal').value), JSON.stringify(map)); prefillMap=map; applyPrefillToFormIfEmpty(); toast('Prefill siap dari cloud','ok'); }catch(e){ toast('Gagal prefill (cek pengaturan/koneksi).','error'); } });
-
-    // Dummy yesterday (local)
-    $('#seedYesterday').addEventListener('click', ()=>{ const y=prevISO($('#tanggal').value); localStorage.setItem(keyForDate(y), JSON.stringify({"Cup 14 oz":{awal:50,masuk:0,jual:2,akhir:48,note:""},"Cup 16 oz":{awal:42,masuk:3,jual:1,akhir:44,note:""},"Sedotan":{awal:248,masuk:10,jual:5,akhir:253,note:""}})); toast('Dummy kemarin tersimpan lokal','ok'); });
-
-    // ===== Cloud Save & Auto-Sync =====
-    async function saveTodayToCloud(dateISO, items){ const s=loadSettings(); if(!s.baseUrl||!s.apiKey) throw new Error('Pengaturan belum lengkap'); const res=await fetch(s.baseUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ key:s.apiKey, date:dateISO, items, by:s.byName||'' })}); const json=await res.json(); if(!json.ok) throw new Error(json.error||'Save error'); return json.saved; }
-    function makeItemsArray(){ return Array.from(state.items.entries()).map(([name,v])=>({name,awal:v.awal,masuk:v.masuk,jual:v.jual,akhir:v.akhir,note:v.note||''})); }
-
-    function getOutbox(){ try{ return JSON.parse(localStorage.getItem(KEY_OUTBOX)||'[]'); }catch{return []} }
-    function setOutbox(arr){ localStorage.setItem(KEY_OUTBOX, JSON.stringify(arr)); updateSyncBadge(); }
-    function pushOutbox(item){ const arr=getOutbox(); arr.push(item); setOutbox(arr); }
-    function updateSyncBadge(){ const n=getOutbox().length; const s=$('#syncBadge'); s.textContent='Outbox: '+n; }
-
-    async function tryAutoSync(){
-      updateNetBadge();
-      if(!navigator.onLine) return;
-      const queue = getOutbox();
-      if(queue.length===0) return;
-      $('#syncBadge').textContent='Outbox: '+queue.length+' (syncing...)';
-      let ok=0, fail=[];
-      for(let i=0;i<queue.length;i++){
-        const item=queue[i];
-        try{ await saveTodayToCloud(item.date, item.items); ok++; }
-        catch(e){ fail.push(item); }
+    // ===== Form logic =====
+    function calcAkhir(){ const a=Number(document.getElementById('stokAwal').value||0); const m=Number(document.getElementById('stokMasuk').value||0); const j=Number(document.getElementById('terjual').value||0); document.getElementById('stokAkhir').value=Math.max(a+m-j,0); }
+    ['stokAwal','stokMasuk','terjual'].forEach(id=>document.getElementById(id).addEventListener('input', calcAkhir));
+    document.getElementById('namaBarang').addEventListener('change', ()=>{ // autofill stok awal dari prefill map (kalau masih 0)
+      const sel=document.getElementById('namaBarang').value;
+      if(Number(document.getElementById('stokAwal').value||0)===0){
+        const map=loadPrefillMap();
+        if(map && map[sel]!=null){ document.getElementById('stokAwal').value=map[sel]; calcAkhir(); toast('Stok Awal diisi dari stok akhir kemarin','ok'); }
       }
-      setOutbox(fail);
-      if(ok>0) toast(`Auto‑sync: ${ok} kiriman berhasil`, 'ok');
-      if(fail.length>0) toast(`Auto‑sync: ${fail.length} gagal, akan dicoba lagi`, 'warn');
-      updateSyncBadge();
-    }
+    });
+    calcAkhir();
 
-    document.getElementById('saveCloud').addEventListener('click', async ()=>{
-      const items = makeItemsArray();
-      if(items.length===0){ toast('Draft kosong','error'); return; }
+    // ===== Prefill (Local only, tidak menambah draft) =====
+    function loadPrefillMap(){ const raw=localStorage.getItem(keyPrefill(document.getElementById('tanggal').value)); try{ return raw?JSON.parse(raw):{}; }catch{ return {}; } }
+    document.getElementById('prefillLocal').addEventListener('click', ()=>{
+      const y=prevISO(document.getElementById('tanggal').value);
+      const raw=localStorage.getItem(keyForDate(y));
+      if(!raw){ toast('Belum ada data kemarin di perangkat ini','error'); return; }
       try{
-        const saved = await saveTodayToCloud(document.getElementById('tanggal').value, items);
-        toast(`Tersimpan ke Sheet: ${saved} baris`,'ok');
-      }catch(e){
-        pushOutbox({date: document.getElementById('tanggal').value, items, ts: Date.now()});
-        toast('Offline/eror. Data dimasukkan ke Outbox.','warn');
-      }
+        const obj=JSON.parse(raw); const map={};
+        Object.keys(obj).forEach(k=>map[k]=obj[k].akhir||0);
+        localStorage.setItem(keyPrefill(document.getElementById('tanggal').value), JSON.stringify(map));
+        toast('Prefill siap (lokal). Pilih barang, Stok Awal akan otomatis.','ok');
+      }catch(e){ toast('Prefill gagal','error'); }
     });
 
-    document.getElementById('queueCloud').addEventListener('click', ()=>{
-      const items = makeItemsArray();
-      if(items.length===0){ toast('Draft kosong','error'); return; }
-      pushOutbox({date: document.getElementById('tanggal').value, items, ts: Date.now()});
-      toast('Ditambahkan ke Outbox. Akan terkirim saat online.','ok');
+    // ===== Add to Draft & Preview =====
+    document.getElementById('addToDraft').addEventListener('click', ()=>{
+      const name=document.getElementById('namaBarang').value.trim();
+      const awal=Number(document.getElementById('stokAwal').value||0);
+      const masuk=Number(document.getElementById('stokMasuk').value||0);
+      const jual=Number(document.getElementById('terjual').value||0);
+      const akhir=Math.max(awal+masuk-jual,0);
+      const note=document.getElementById('catatan').value.trim();
+      if(!name){ toast('Pilih nama barang','error'); return; }
+      if(state.items.has(name)){ toast('Barang sudah ada di draft','error'); return; }
+      state.items.set(name,{awal,masuk,jual,akhir,note});
+      renderTable(); buildPreview(); saveDraft(); toast('Ditambahkan ke draft','ok');
     });
+    document.getElementById('resetForm').addEventListener('click', ()=>{
+      document.getElementById('stokAwal').value=0; document.getElementById('stokMasuk').value=0; document.getElementById('terjual').value=0; document.getElementById('catatan').value=''; calcAkhir();
+    });
+
+    function buildPreview(){
+      const tgl=document.getElementById('tanggal').value||todayISO();
+      const by=localStorage.getItem('so_byName')||'';
+      let lines=['Stock Opname',`Tanggal: ${tgl}`, by?`By: ${by}`:'',''];
+      for(const [name,obj] of state.items.entries()){
+        lines.push(`Barang: ${name}`);
+        lines.push(`Stok Awal: ${obj.awal}`);
+        lines.push(`Restock: ${obj.masuk}`);
+        lines.push(`Terjual: ${obj.jual}`);
+        lines.push(`Stok Akhir: ${obj.akhir}`);
+        if(obj.note) lines.push(`Catatan: ${obj.note}`);
+        lines.push('');
+      }
+      document.getElementById('waPreview').textContent=lines.join('\n');
+    }
 
     // ===== WA =====
     function openWhatsApp(num, msg){
-      const e = encodeURIComponent(msg);
-      const url1 = `https://api.whatsapp.com/send?phone=${num}&text=${e}`;
-      const url2 = `https://wa.me/${num}?text=${e}`;
-      try { window.location.href = url1; } catch(_) { window.location.href = url2; }
+      const e=encodeURIComponent(msg);
+      const url1=`https://api.whatsapp.com/send?phone=${num}&text=${e}`;
+      const url2=`https://wa.me/${num}?text=${e}`;
+      try{ window.location.href=url1; }catch(_){ window.location.href=url2; }
     }
     document.getElementById('sendWA').addEventListener('click', ()=>{
-      const num = document.getElementById('adminNumber').value.replace(/[^0-9]/g,'');
+      const num=(localStorage.getItem('so_admin')||document.getElementById('adminNumber').value||'').replace(/[^0-9]/g,'');
       if(!num){ toast('Nomor WA admin kosong','error'); return; }
+      buildPreview(); // pastikan terbaru
       openWhatsApp(num, document.getElementById('waPreview').textContent);
+    });
+
+    // Hapus draft hari ini
+    document.getElementById('clearDay').addEventListener('click', ()=>{
+      localStorage.removeItem(keyForDate(document.getElementById('tanggal').value));
+      state.items.clear(); renderTable(); buildPreview(); toast('Draft hari ini dihapus','ok');
     });
 
     // ===== SW Register =====
     if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(()=>{}) ); }
 
     // Boot
-    renderSettings(); loadDraft(); prefillMap = loadPrefillMap(); applyPrefillToFormIfEmpty(); buildPreview(); updateSyncBadge(); tryAutoSync(); setInterval(tryAutoSync, 15000);
+    loadSimple(); loadDraft(); buildPreview();
   </script>
 </body>
 </html>
