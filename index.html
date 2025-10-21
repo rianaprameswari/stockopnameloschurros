@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#16a34a" />
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png">
-  <title>Stock Opname – Sederhana (Single Device)</title>
+  <title>Stock Opname – Super Simpel</title>
   <style>
     :root{--bg:#f7f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--primary:#16a34a;--danger:#dc2626;--radius:16px;--shadow:0 8px 24px rgba(0,0,0,.08)}
     *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
@@ -20,7 +20,6 @@
     .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
     .btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;background:var(--primary);color:#fff;border:none;font-weight:700;cursor:pointer;transition:.15s;box-shadow:0 6px 16px rgba(22,163,74,.35)}
     .btn:hover{filter:brightness(1.05)}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
     .btn-ghost{background:#eef7f0;color:#065f46}
     .btn-danger{background:var(--danger)}
     .muted{color:var(--muted);font-size:12px}
@@ -29,44 +28,28 @@
     .table{width:100%;border-collapse:collapse}
     .table th,.table td{border-bottom:1px solid #e5e7eb;padding:10px 8px;text-align:left;font-size:14px;white-space:nowrap}
     .table th{font-size:12px;color:#374151}
-    .date-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .date-shell{width:100%;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;background:#fff}
-    input[type="date"]{appearance:none;-webkit-appearance:none;border:none;width:100%;padding:14px 12px;background:#fff;border-radius:0;font-size:16px;line-height:1.3}
-    @media (max-width: 720px){ .row{grid-template-columns:1fr} }
-    @media (max-width: 540px){
-      .row3{grid-template-columns:1fr}
-      .container{padding:12px}
-      input,select,textarea{font-size:16px;padding:14px}
-      .btn{width:100%}
-      .date-row{flex-direction:column;align-items:stretch}
-    }
+    .date-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 720px){ .row{grid-template-columns:1fr} .date-row{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Stock Opname – Sederhana (Single Device)</h1>
-    <p class="muted">Mode sederhana: tanpa cloud, offline-first. Draft & prefill disimpan di perangkat yang sama.</p>
+    <h1>Stock Opname – Super Simpel</h1>
+    <p class="muted">Satu HP saja. Semua data disimpan lokal. Prefill dari kemarin (lokal). WhatsApp ke admin permanen.</p>
 
     <section class="card">
-      <div class="row">
+      <div class="date-row">
+        <div>
+          <label>Tanggal</label>
+          <input id="tanggal" type="date" />
+        </div>
         <div>
           <label>Nama Staff (By)</label>
           <input id="byName" placeholder="misal: Kasir A" />
-          <p class="muted">Tersimpan otomatis di perangkat. Akan muncul di teks WhatsApp.</p>
-        </div>
-        <div>
-          <label>Nomor WA Admin (62812… tanpa +)</label>
-          <input id="adminNumber" value="6281234567890" inputmode="numeric" />
+          <p class="muted">Akan muncul di pesan WA.</p>
         </div>
       </div>
-    </section>
-
-    <section class="card">
-      <label>Tanggal</label>
-      <div class="date-row">
-        <div class="date-shell"><input id="tanggal" type="date" /></div>
-        <button class="btn btn-ghost" id="prefillLocal" type="button">⬇ Prefill dari Kemarin (Lokal)</button>
-      </div>
+      <button class="btn btn-ghost" id="prefillLocal" type="button">⬇ Prefill dari Kemarin (Lokal)</button>
     </section>
 
     <section class="card">
@@ -137,118 +120,44 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    // ===== Helpers =====
+    const ADMIN_NUMBER = "6282147211835";
+
     const $ = q => document.querySelector(q);
     const keyForDate = d => `so_draft_${d}`;
     const keyPrefill = d => `so_prefill_${d}`;
     function todayISO(){ return new Date().toISOString().slice(0,10); }
     function prevISO(s){ const d=new Date(s); d.setDate(d.getDate()-1); return d.toISOString().slice(0,10); }
-    function toast(msg,type='info'){ const t=document.getElementById('toast'); t.textContent=msg; t.style.background=(type==='ok')?'#065f46':(type==='error')?'#991b1b':'#111827'; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
 
-    // ===== Simple settings (auto-save) =====
-    function loadSimple(){ document.getElementById('byName').value = localStorage.getItem('so_byName')||''; document.getElementById('adminNumber').value = localStorage.getItem('so_admin')||'6281234567890'; }
-    ['byName','adminNumber'].forEach(id=>{
-      document.addEventListener('input', e=>{
-        if(e.target && e.target.id===id){
-          localStorage.setItem(id==='byName'?'so_byName':'so_admin', e.target.value);
-        }
-      });
-    });
+    const state = { items:new Map() };
 
-    // ===== Date & Draft =====
+    function loadDraft(){ state.items.clear(); const raw=localStorage.getItem(keyForDate(document.getElementById('tanggal').value)); if(raw){ try{ const obj=JSON.parse(raw); for(const k of Object.keys(obj)) state.items.set(k,obj[k]); }catch(e){} } renderTable(); }
+    function saveDraft(){ const obj={}; for(const [k,v] of state.items.entries()) obj[k]=v; localStorage.setItem(keyForDate(document.getElementById('tanggal').value), JSON.stringify(obj)); }
+    function renderTable(){ const tb=document.querySelector('#draftTable tbody'); tb.innerHTML=''; for(const [name,obj] of state.items.entries()){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${name}</td><td>${obj.awal}</td><td>${obj.masuk}</td><td>${obj.jual}</td><td>${obj.akhir}</td><td>${obj.note||''}</td><td><button class='btn btn-danger' data-del='${name}' type='button'>Hapus</button></td>`; tb.appendChild(tr); } tb.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click',e=>{ const nm=e.currentTarget.getAttribute('data-del'); state.items.delete(nm); renderTable(); buildPreview(); saveDraft(); })); }
+    function calcAkhir(){ const a=Number(document.getElementById('stokAwal').value||0); const m=Number(document.getElementById('stokMasuk').value||0); const j=Number(document.getElementById('terjual').value||0); document.getElementById('stokAkhir').value=Math.max(a+m-j,0); }
+    function buildPreview(){ const tgl=document.getElementById('tanggal').value||todayISO(); const by=document.getElementById('byName').value||''; let lines=['Stock Opname',`Tanggal: ${tgl}`, by?`By: ${by}`:'','']; for(const [name,obj] of state.items.entries()){ lines.push(`Barang: ${name}`); lines.push(`Stok Awal: ${obj.awal}`); lines.push(`Restock: ${obj.masuk}`); lines.push(`Terjual: ${obj.jual}`); lines.push(`Stok Akhir: ${obj.akhir}`); if(obj.note) lines.push(`Catatan: ${obj.note}`); lines.push(''); } document.getElementById('waPreview').textContent=lines.join('\n'); }
+    function openWhatsApp(num,msg){ const e=encodeURIComponent(msg); const url1=`https://api.whatsapp.com/send?phone=${num}&text=${e}`; const url2=`https://wa.me/${num}?text=${e}`; try{ window.location.href=url1 }catch(_ ){ window.location.href=url2 } }
+
     document.getElementById('tanggal').value = todayISO();
     document.getElementById('tanggal').addEventListener('change', ()=>{ loadDraft(); buildPreview(); });
 
-    const state = { items: new Map() };
-    function loadDraft(){ state.items.clear(); const raw=localStorage.getItem(keyForDate(document.getElementById('tanggal').value)); if(raw){ try{ const obj=JSON.parse(raw); for(const k of Object.keys(obj)) state.items.set(k,obj[k]); }catch(e){} } renderTable(); }
-    function saveDraft(){ const obj={}; for(const [k,v] of state.items.entries()) obj[k]=v; localStorage.setItem(keyForDate(document.getElementById('tanggal').value), JSON.stringify(obj)); }
-
-    function renderTable(){ const tb=document.querySelector('#draftTable tbody'); tb.innerHTML=''; for(const [name,obj] of state.items.entries()){ const tr=document.createElement('tr'); tr.innerHTML=`<td>${name}</td><td>${obj.awal}</td><td>${obj.masuk}</td><td>${obj.jual}</td><td>${obj.akhir}</td><td>${obj.note||''}</td><td><button class='btn btn-danger' data-del='${name}' type='button'>Hapus</button></td>`; tb.appendChild(tr);} tb.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click',e=>{ const nm=e.currentTarget.getAttribute('data-del'); state.items.delete(nm); renderTable(); buildPreview(); saveDraft(); })); }
-
-    // ===== Form logic =====
-    function calcAkhir(){ const a=Number(document.getElementById('stokAwal').value||0); const m=Number(document.getElementById('stokMasuk').value||0); const j=Number(document.getElementById('terjual').value||0); document.getElementById('stokAkhir').value=Math.max(a+m-j,0); }
     ['stokAwal','stokMasuk','terjual'].forEach(id=>document.getElementById(id).addEventListener('input', calcAkhir));
-    document.getElementById('namaBarang').addEventListener('change', ()=>{ // autofill stok awal dari prefill map (kalau masih 0)
-      const sel=document.getElementById('namaBarang').value;
-      if(Number(document.getElementById('stokAwal').value||0)===0){
-        const map=loadPrefillMap();
-        if(map && map[sel]!=null){ document.getElementById('stokAwal').value=map[sel]; calcAkhir(); toast('Stok Awal diisi dari stok akhir kemarin','ok'); }
-      }
-    });
-    calcAkhir();
+    document.getElementById('namaBarang').addEventListener('change', ()=>{ const sel=document.getElementById('namaBarang').value; if(Number(document.getElementById('stokAwal').value||0)===0){ const map=loadPrefillMap(); if(map && map[sel]!=null){ document.getElementById('stokAwal').value=map[sel]; calcAkhir(); } } });
 
-    // ===== Prefill (Local only, tidak menambah draft) =====
     function loadPrefillMap(){ const raw=localStorage.getItem(keyPrefill(document.getElementById('tanggal').value)); try{ return raw?JSON.parse(raw):{}; }catch{ return {}; } }
-    document.getElementById('prefillLocal').addEventListener('click', ()=>{
-      const y=prevISO(document.getElementById('tanggal').value);
-      const raw=localStorage.getItem(keyForDate(y));
-      if(!raw){ toast('Belum ada data kemarin di perangkat ini','error'); return; }
-      try{
-        const obj=JSON.parse(raw); const map={};
-        Object.keys(obj).forEach(k=>map[k]=obj[k].akhir||0);
-        localStorage.setItem(keyPrefill(document.getElementById('tanggal').value), JSON.stringify(map));
-        toast('Prefill siap (lokal). Pilih barang, Stok Awal akan otomatis.','ok');
-      }catch(e){ toast('Prefill gagal','error'); }
-    });
+    document.getElementById('prefillLocal').addEventListener('click', ()=>{ const y=prevISO(document.getElementById('tanggal').value); const raw=localStorage.getItem(keyForDate(y)); if(!raw){ alert('Belum ada data kemarin di HP ini'); return; } try{ const obj=JSON.parse(raw); const map={}; Object.keys(obj).forEach(k=>map[k]=obj[k].akhir||0); localStorage.setItem(keyPrefill(document.getElementById('tanggal').value), JSON.stringify(map)); alert('Prefill siap (lokal). Pilih barang → Stok Awal otomatis.'); }catch(e){ alert('Prefill gagal'); } });
 
-    // ===== Add to Draft & Preview =====
-    document.getElementById('addToDraft').addEventListener('click', ()=>{
-      const name=document.getElementById('namaBarang').value.trim();
-      const awal=Number(document.getElementById('stokAwal').value||0);
-      const masuk=Number(document.getElementById('stokMasuk').value||0);
-      const jual=Number(document.getElementById('terjual').value||0);
-      const akhir=Math.max(awal+masuk-jual,0);
-      const note=document.getElementById('catatan').value.trim();
-      if(!name){ toast('Pilih nama barang','error'); return; }
-      if(state.items.has(name)){ toast('Barang sudah ada di draft','error'); return; }
-      state.items.set(name,{awal,masuk,jual,akhir,note});
-      renderTable(); buildPreview(); saveDraft(); toast('Ditambahkan ke draft','ok');
-    });
-    document.getElementById('resetForm').addEventListener('click', ()=>{
-      document.getElementById('stokAwal').value=0; document.getElementById('stokMasuk').value=0; document.getElementById('terjual').value=0; document.getElementById('catatan').value=''; calcAkhir();
-    });
+    document.getElementById('addToDraft').addEventListener('click', ()=>{ const name=document.getElementById('namaBarang').value.trim(); const awal=Number(document.getElementById('stokAwal').value||0); const masuk=Number(document.getElementById('stokMasuk').value||0); const jual=Number(document.getElementById('terjual').value||0); const akhir=Math.max(awal+masuk-jual,0); const note=document.getElementById('catatan').value.trim(); if(!name){ alert('Pilih nama barang'); return; } if(state.items.has(name)){ alert('Barang sudah ada di draft'); return; } state.items.set(name,{awal,masuk,jual,akhir,note}); renderTable(); buildPreview(); saveDraft(); });
+    document.getElementById('resetForm').addEventListener('click', ()=>{ document.getElementById('stokAwal').value=0; document.getElementById('stokMasuk').value=0; document.getElementById('terjual').value=0; document.getElementById('catatan').value=''; calcAkhir(); });
+    document.getElementById('sendWA').addEventListener('click', ()=>{ buildPreview(); openWhatsApp(ADMIN_NUMBER, document.getElementById('waPreview').textContent); });
+    document.getElementById('clearDay').addEventListener('click', ()=>{ localStorage.removeItem(keyForDate(document.getElementById('tanggal').value)); state.items.clear(); renderTable(); buildPreview(); });
 
-    function buildPreview(){
-      const tgl=document.getElementById('tanggal').value||todayISO();
-      const by=localStorage.getItem('so_byName')||'';
-      let lines=['Stock Opname',`Tanggal: ${tgl}`, by?`By: ${by}`:'',''];
-      for(const [name,obj] of state.items.entries()){
-        lines.push(`Barang: ${name}`);
-        lines.push(`Stok Awal: ${obj.awal}`);
-        lines.push(`Restock: ${obj.masuk}`);
-        lines.push(`Terjual: ${obj.jual}`);
-        lines.push(`Stok Akhir: ${obj.akhir}`);
-        if(obj.note) lines.push(`Catatan: ${obj.note}`);
-        lines.push('');
-      }
-      document.getElementById('waPreview').textContent=lines.join('\n');
-    }
-
-    // ===== WA =====
-    function openWhatsApp(num, msg){
-      const e=encodeURIComponent(msg);
-      const url1=`https://api.whatsapp.com/send?phone=${num}&text=${e}`;
-      const url2=`https://wa.me/${num}?text=${e}`;
-      try{ window.location.href=url1; }catch(_){ window.location.href=url2; }
-    }
-    document.getElementById('sendWA').addEventListener('click', ()=>{
-      const num=(localStorage.getItem('so_admin')||document.getElementById('adminNumber').value||'').replace(/[^0-9]/g,'');
-      if(!num){ toast('Nomor WA admin kosong','error'); return; }
-      buildPreview(); // pastikan terbaru
-      openWhatsApp(num, document.getElementById('waPreview').textContent);
-    });
-
-    // Hapus draft hari ini
-    document.getElementById('clearDay').addEventListener('click', ()=>{
-      localStorage.removeItem(keyForDate(document.getElementById('tanggal').value));
-      state.items.clear(); renderTable(); buildPreview(); toast('Draft hari ini dihapus','ok');
-    });
-
-    // ===== SW Register =====
     if('serviceWorker' in navigator){ window.addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(()=>{}) ); }
 
-    // Boot
-    loadSimple(); loadDraft(); buildPreview();
+    const storedBy = localStorage.getItem('so_byName')||'';
+    if(storedBy) document.getElementById('byName').value = storedBy;
+    document.getElementById('byName').addEventListener('input', (e)=> localStorage.setItem('so_byName', e.target.value));
+
+    loadDraft(); buildPreview();
   </script>
 </body>
 </html>
