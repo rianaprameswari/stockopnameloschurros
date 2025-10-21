@@ -1,1 +1,0 @@
-Stock Opname – PWA (Auto‑Sync)\n1) Upload semua file ke GitHub Pages.\n2) Sheet: tab name 'Stock', header: date,item,awal,masuk,jual,akhir,note,ts,by\n3) Apps Script: tempel apps_script_code.txt → ganti AUTH_KEY → Deploy Web App (Anyone).\n4) Isi Pengaturan di aplikasi (URL + API KEY). Outbox tersinkron otomatis saat online.
